@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scanner - Results</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>Scan Results</h1>
+
+      {% if results %}
+        <p>
+          Input:
+          <b>{{ results.input_type }}</b>
+          — <span class="mono">{{ results.input_value }}</span>
+        </p>
+      {% endif %}
+
+      {% if results.input_type == "file" and results.file_sha256 %}
+        <p>
+          Computed SHA-256:
+          <span class="mono hash">{{ results.file_sha256 }}</span>
+        </p>
+      {% endif %}
+
+      {% if results.input_type == "hash" and results.file_hash_provided %}
+        <p>
+          Provided hash:
+          <span class="mono hash">{{ results.file_hash_provided }}</span>
+        </p>
+      {% endif %}
+
+      <p><a href="/">← Back to upload</a></p>
+    </header>
+
+    {% if messages %}
+      <section class="card warn">
+        <h2>Messages</h2>
+        <ul>
+          {% for m in messages %}
+            <li>{{ m }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <section class="card">
+      <h2>Results</h2>
+
+      <!-- ===================== VT URL ===================== -->
+      {% if results.vt_url_stats %}
+        {% set det = results.vt_url_detected|default(0) %}
+        {% set pct = results.vt_url_percent|default(0) %}
+        {% if det == 0 %}
+          {% set tone = "good" %}
+        {% elif det <= 2 %}
+          {% set tone = "warn" %}
+        {% else %}
+          {% set tone = "bad" %}
+        {% endif %}
+
+        <div class="block">
+          <div class="block-head">
+            <h3>VirusTotal (URL)</h3>
+            {% if results.vt_url_link %}
+              <a class="btnlink" href="{{ results.vt_url_link }}" target="_blank" rel="noreferrer">Open Report</a>
+            {% endif %}
+          </div>
+
+          <div class="score-row">
+            <div class="gauge {{ tone }}" style="--p: {{ pct }};">
+              <div class="gauge-inner">
+                <div class="gauge-big">{{ results.vt_url_detected }}</div>
+                <div class="gauge-small">/ {{ results.vt_url_total }}</div>
+                <div class="gauge-label">Detections</div>
+              </div>
+            </div>
+
+            <div class="score-meta">
+              <div class="meta-card">
+                <div class="meta-title">Reputation</div>
+                {% if results.vt_url_reputation is not none %}
+                  <div class="meta-value">{{ results.vt_url_reputation }}</div>
+                {% else %}
+                  <div class="meta-muted">N/A</div>
+                {% endif %}
+              </div>
+
+              <div class="meta-card">
+                <div class="meta-title">Meaning</div>
+                <div class="meta-muted">
+                  Gauge = (malicious + suspicious) / total engines
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats">
+            {% for k, v in results.vt_url_stats.items() %}
+              <div class="stat"><span>{{ k }}</span><b>{{ v }}</b></div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- ===================== URLSCAN ===================== -->
+      {% if results.urlscan %}
+        <div class="block">
+          <div class="block-head">
+            <h3>urlscan.io (URL)</h3>
+            {% if results.urlscan.result_link %}
+              <a class="btnlink" href="{{ results.urlscan.result_link }}" target="_blank" rel="noreferrer">Open Result</a>
+            {% endif %}
+          </div>
+
+          {% if results.urlscan.ok %}
+            <div class="stats">
+              <div class="stat"><span>score</span><b>{{ results.urlscan_summary.score }}</b></div>
+              <div class="stat"><span>malicious</span><b>{{ results.urlscan_summary.malicious }}</b></div>
+              <div class="stat wide"><span>categories</span><b>{{ results.urlscan_summary.categories }}</b></div>
+            </div>
+          {% else %}
+            <p class="bad">Failed at: {{ results.urlscan.step }} (status: {{ results.urlscan.status }})</p>
+            <details><summary>Show response</summary><pre>{{ results.urlscan.body | tojson(indent=2) }}</pre></details>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- ===================== VT FILE / HASH ===================== -->
+      {% if results.vt_file_stats %}
+        {% set detf = results.vt_file_detected|default(0) %}
+        {% set pctf = results.vt_file_percent|default(0) %}
+        {% if detf == 0 %}
+          {% set tonef = "good" %}
+        {% elif detf <= 2 %}
+          {% set tonef = "warn" %}
+        {% else %}
+          {% set tonef = "bad" %}
+        {% endif %}
+
+        <div class="block">
+          <div class="block-head">
+            <h3>VirusTotal (File / Hash)</h3>
+            {% if results.vt_file_link %}
+              <a class="btnlink" href="{{ results.vt_file_link }}" target="_blank" rel="noreferrer">Open Report</a>
+            {% endif %}
+          </div>
+
+          <div class="score-row">
+            <div class="gauge {{ tonef }}" style="--p: {{ pctf }};">
+              <div class="gauge-inner">
+                <div class="gauge-big">{{ results.vt_file_detected }}</div>
+                <div class="gauge-small">/ {{ results.vt_file_total }}</div>
+                <div class="gauge-label">Detections</div>
+              </div>
+            </div>
+
+            <div class="score-meta">
+              <div class="meta-card">
+                <div class="meta-title">Reputation</div>
+                {% if results.vt_file_reputation is not none %}
+                  <div class="meta-value">{{ results.vt_file_reputation }}</div>
+                {% else %}
+                  <div class="meta-muted">N/A</div>
+                {% endif %}
+              </div>
+
+              <div class="meta-card">
+                <div class="meta-title">SHA / Hash</div>
+                {% if results.file_sha256 %}
+                  <div class="meta-muted mono hash">{{ results.file_sha256 }}</div>
+                {% elif results.file_hash_provided %}
+                  <div class="meta-muted mono hash">{{ results.file_hash_provided }}</div>
+                {% else %}
+                  <div class="meta-muted">N/A</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="stats">
+            {% for k, v in results.vt_file_stats.items() %}
+              <div class="stat"><span>{{ k }}</span><b>{{ v }}</b></div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    </section>
+
+    <footer class="foot">
+      <p>If scans are slow, increase <code>tries</code>/<code>delay</code> in <code>app.py</code>.</p>
+    </footer>
+  </div>
+</body>
+</html>

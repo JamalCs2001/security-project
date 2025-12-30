@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scanner - Upload</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>URL & File Scanner</h1>
+      <p>Scan URLs with VirusTotal + urlscan.io, and files (or file hashes) with VirusTotal.</p>
+    </header>
+
+    {% if messages %}
+      <section class="card warn">
+        <h2>Messages</h2>
+        <ul>
+          {% for m in messages %}
+            <li>{{ m }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <section class="grid">
+      <div class="card">
+        <h2>Scan URL</h2>
+        <form method="post" action="/scan">
+          <input type="hidden" name="action" value="scan_url" />
+
+          <label>URL</label>
+          <input name="url" type="url" placeholder="https://example.com" required>
+
+          <label>urlscan visibility</label>
+          <select name="visibility">
+            <option value="public">public</option>
+            <option value="unlisted">unlisted</option>
+            <option value="private">private</option>
+          </select>
+
+          <button type="submit">Scan URL</button>
+          <small>Tip: “public” makes the scan visible to others on urlscan.io.</small>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Scan File (Upload OR Hash)</h2>
+
+        <form method="post" action="/scan" enctype="multipart/form-data">
+          <input type="hidden" name="action" value="scan_file" />
+
+          <label>Upload a file (optional)</label>
+          <input name="file" type="file">
+
+          <div class="or-line"><span>OR</span></div>
+
+          <label>Enter hash (SHA-256 / SHA-1 / MD5)</label>
+          <input name="file_hash" type="text" placeholder="e.g. 44d88612fea8a8f36de82e1278abb02f">
+
+          <button type="submit">Scan File / Hash</button>
+          <small>Choose ONE: upload a file OR enter a hash (not both).</small>
+        </form>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Keys needed: <code>VT_API_KEY</code> and <code>URLSCAN_API_KEY</code>.</p>
+    </footer>
+  </div>
+</body>
+</html>
