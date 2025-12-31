@@ -1,199 +1,474 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scanner - Results</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan Results</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <!-- Fallback styling to match your old layout screenshot -->
+  <style>
+    .sr-wrap{max-width:1000px;margin:40px auto;padding:0 18px;}
+    .sr-title{font-size:34px;font-weight:800;letter-spacing:.3px;margin:0 0 6px;}
+    .sr-sub{opacity:.85;margin:0 0 6px;}
+    .sr-back{display:inline-block;margin:0 0 18px;text-decoration:underline;opacity:.9}
+    .sr-panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 18px 10px;}
+    .sr-panel-title{font-weight:700;margin:0 0 14px;}
+    .sr-divider{border-top:1px dashed rgba(255,255,255,.12);margin:14px 0;}
+    .sr-section{padding:6px 0 18px;}
+    .sr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+    .sr-head h3{margin:0;font-size:18px;font-weight:800;}
+    .sr-btn{display:inline-block;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);
+            background:rgba(255,255,255,.06);text-decoration:none;font-weight:650;}
+    .sr-btn:hover{background:rgba(255,255,255,.10);}
+    .sr-btn-disabled{opacity:.55;pointer-events:none;}
+    .sr-row{display:flex;gap:14px;flex-wrap:wrap;}
+    .sr-card{flex:1;min-width:280px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;}
+    .sr-mini{flex:1;min-width:150px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:12px;}
+    .sr-label{font-size:12px;opacity:.7;margin-bottom:4px;}
+    .sr-value{font-size:18px;font-weight:800;}
+    .sr-muted{opacity:.72}
+    .sr-error{color:#ff6b6b;font-weight:650;margin:8px 0 0;}
+    .sr-kv{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
+    .sr-kv .sr-mini{min-width:150px;}
+    .sr-pre{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.10);
+            border-radius:12px;padding:12px;margin:10px 0 0;max-height:280px;overflow:auto;font-size:12px;}
+    details summary{cursor:pointer;opacity:.9}
+    details{margin-top:10px;}
+
+    .sr-why{
+      margin-top:12px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:12px;
+      padding:12px;
+    }
+    .sr-why h4{margin:0 0 6px;font-size:13px;font-weight:800;opacity:.95}
+    .sr-why ul{margin:8px 0 0 18px;padding:0;}
+    .sr-why li{margin:4px 0; opacity:.9;}
+    .sr-pill{
+      display:inline-block;
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      opacity:.9;
+      margin-left:8px;
+    }
+
+    /* Donut gauge (no JS) */
+    .sr-donut{
+      --p:0;
+      --c:#ff5b5b;
+      width:120px;height:120px;border-radius:50%;
+      background:
+        conic-gradient(var(--c) calc(var(--p)*1%), rgba(255,255,255,.10) 0);
+      display:grid;place-items:center;
+      position:relative;
+      box-shadow:inset 0 0 0 10px rgba(255,255,255,.08);
+    }
+    .sr-donut::before{
+      content:"";
+      width:88px;height:88px;border-radius:50%;
+      background:rgba(10,14,25,.90);
+      border:1px solid rgba(255,255,255,.08);
+      position:absolute;
+    }
+    .sr-donut-center{
+      position:relative;
+      text-align:center;
+      line-height:1.1;
+    }
+    .sr-donut-center .big{font-size:28px;font-weight:900;}
+    .sr-donut-center .small{font-size:12px;opacity:.85;margin-top:2px;}
+    .sr-donut-center .tiny{font-size:11px;opacity:.75;margin-top:2px;}
+  </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header class="top">
-      <h1>Scan Results</h1>
+  <div class="sr-wrap">
+    <div class="sr-title">Scan Results</div>
 
-      {% if results %}
-        <p>
-          Input:
-          <b>{{ results.input_type }}</b>
-          — <span class="mono">{{ results.input_value }}</span>
-        </p>
+    <div class="sr-sub">
+      {% if results.get("input_type") %}
+        Input: <strong>{{ results.get("input_type") }}</strong> —
+        <span class="sr-muted">{{ results.get("input_value") }}</span>
+      {% else %}
+        <span class="sr-muted">No input.</span>
       {% endif %}
+    </div>
 
-      {% if results.input_type == "file" and results.file_sha256 %}
-        <p>
-          Computed SHA-256:
-          <span class="mono hash">{{ results.file_sha256 }}</span>
-        </p>
-      {% endif %}
+    <a class="sr-back" href="{{ url_for('scanner.upload_page') }}">← Back to upload</a>
 
-      {% if results.input_type == "hash" and results.file_hash_provided %}
-        <p>
-          Provided hash:
-          <span class="mono hash">{{ results.file_hash_provided }}</span>
-        </p>
-      {% endif %}
+    <div class="sr-panel">
+      <div class="sr-panel-title">Results</div>
+      <div class="sr-divider"></div>
 
-      <p><a href="/">← Back to upload</a></p>
-    </header>
+      <!-- ===================== URL MODE ===================== -->
+      {% if results.get("input_type") == "url" %}
 
-    {% if messages %}
-      <section class="card warn">
-        <h2>Messages</h2>
-        <ul>
-          {% for m in messages %}
-            <li>{{ m }}</li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
-
-    <section class="card">
-      <h2>Results</h2>
-
-      <!-- ===================== VT URL ===================== -->
-      {% if results.vt_url_stats %}
-        {% set det = results.vt_url_detected|default(0) %}
-        {% set pct = results.vt_url_percent|default(0) %}
-        {% if det == 0 %}
-          {% set tone = "good" %}
-        {% elif det <= 2 %}
-          {% set tone = "warn" %}
-        {% else %}
-          {% set tone = "bad" %}
-        {% endif %}
-
-        <div class="block">
-          <div class="block-head">
+        <!-- ========== VirusTotal (URL) ========== -->
+        <div class="sr-section">
+          <div class="sr-head">
             <h3>VirusTotal (URL)</h3>
-            {% if results.vt_url_link %}
-              <a class="btnlink" href="{{ results.vt_url_link }}" target="_blank" rel="noreferrer">Open Report</a>
+            {% if results.get("vt_url_link") %}
+              <a class="sr-btn" href="{{ results.get('vt_url_link') }}" target="_blank" rel="noopener">Open Report</a>
+            {% else %}
+              <span class="sr-btn sr-btn-disabled">Open Report</span>
             {% endif %}
           </div>
 
-          <div class="score-row">
-            <div class="gauge {{ tone }}" style="--p: {{ pct }};">
-              <div class="gauge-inner">
-                <div class="gauge-big">{{ results.vt_url_detected }}</div>
-                <div class="gauge-small">/ {{ results.vt_url_total }}</div>
-                <div class="gauge-label">Detections</div>
-              </div>
+          {% if results.get("vt_url_report") and results.get("vt_url_report").get("ok") is not none and not results.get("vt_url_report").get("ok") %}
+            <div class="sr-error">
+              VirusTotal URL error: {{ results.get("vt_url_report").get("error") or "Request failed" }}
             </div>
+          {% endif %}
 
-            <div class="score-meta">
-              <div class="meta-card">
-                <div class="meta-title">Reputation</div>
-                {% if results.vt_url_reputation is not none %}
-                  <div class="meta-value">{{ results.vt_url_reputation }}</div>
-                {% else %}
-                  <div class="meta-muted">N/A</div>
-                {% endif %}
+          <div class="sr-row">
+            <div class="sr-card" style="display:flex;gap:16px;align-items:center;">
+              {% set detected = results.get("vt_url_detected", 0) %}
+              {% set total = results.get("vt_url_total", 0) %}
+              {% set pct = results.get("vt_url_percent", 0) %}
+
+              <div class="sr-donut" style="--p: {{ pct }}; --c: #ff6b6b;">
+                <div class="sr-donut-center">
+                  <div class="big">{{ detected }}</div>
+                  <div class="small">/ {{ total }}</div>
+                  <div class="tiny">Detections</div>
+                </div>
               </div>
 
-              <div class="meta-card">
-                <div class="meta-title">Meaning</div>
-                <div class="meta-muted">
-                  Gauge = (malicious + suspicious) / total engines
+              <div style="flex:1;">
+                <div class="sr-mini" style="margin-bottom:10px;">
+                  <div class="sr-label">Reputation</div>
+                  <div class="sr-value">{{ results.get("vt_url_reputation", 0) }}</div>
+                </div>
+
+                <div class="sr-mini">
+                  <div class="sr-label">Meaning</div>
+                  <div class="sr-muted">Gauge = (malicious + suspicious) / total engines</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="stats">
-            {% for k, v in results.vt_url_stats.items() %}
-              <div class="stat"><span>{{ k }}</span><b>{{ v }}</b></div>
-            {% endfor %}
-          </div>
+          {% if results.get("vt_url_stats") %}
+            {% set st = results.get("vt_url_stats") %}
+            <div class="sr-kv">
+              <div class="sr-mini">
+                <div class="sr-label">malicious</div>
+                <div class="sr-value">{{ st.get("malicious", 0) }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">suspicious</div>
+                <div class="sr-value">{{ st.get("suspicious", 0) }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">undetected</div>
+                <div class="sr-value">{{ st.get("undetected", 0) }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">harmless</div>
+                <div class="sr-value">{{ st.get("harmless", 0) }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">timeout</div>
+                <div class="sr-value">{{ st.get("timeout", 0) }}</div>
+              </div>
+            </div>
+          {% endif %}
         </div>
-      {% endif %}
 
-      <!-- ===================== URLSCAN ===================== -->
-      {% if results.urlscan %}
-        <div class="block">
-          <div class="block-head">
+        <div class="sr-divider"></div>
+
+        <!-- ========== urlscan.io (URL) ========== -->
+        <div class="sr-section">
+          <div class="sr-head">
             <h3>urlscan.io (URL)</h3>
-            {% if results.urlscan.result_link %}
-              <a class="btnlink" href="{{ results.urlscan.result_link }}" target="_blank" rel="noreferrer">Open Result</a>
+            {% set us_task = (results.get("urlscan") or {}).get("task", {}) %}
+            {% if us_task and us_task.get("reportURL") %}
+              <a class="sr-btn" href="{{ us_task.get('reportURL') }}" target="_blank" rel="noopener">Open Result</a>
+            {% else %}
+              <span class="sr-btn sr-btn-disabled">Open Result</span>
             {% endif %}
           </div>
 
-          {% if results.urlscan.ok %}
-            <div class="stats">
-              <div class="stat"><span>score</span><b>{{ results.urlscan_summary.score }}</b></div>
-              <div class="stat"><span>malicious</span><b>{{ results.urlscan_summary.malicious }}</b></div>
-              <div class="stat wide"><span>categories</span><b>{{ results.urlscan_summary.categories }}</b></div>
+          {% if results.get("urlscan_error") %}
+            <div class="sr-error">{{ results.get("urlscan_error") }}</div>
+          {% endif %}
+
+          {% set summary = results.get("urlscan_summary") or {} %}
+          <div class="sr-kv">
+            <div class="sr-mini">
+              <div class="sr-label">score</div>
+              <div class="sr-value">{{ summary.get("score", 0) }}</div>
             </div>
-          {% else %}
-            <p class="bad">Failed at: {{ results.urlscan.step }} (status: {{ results.urlscan.status }})</p>
-            <details><summary>Show response</summary><pre>{{ results.urlscan.body | tojson(indent=2) }}</pre></details>
+            <div class="sr-mini">
+              <div class="sr-label">malicious</div>
+              <div class="sr-value">{{ summary.get("malicious", false) }}</div>
+            </div>
+          </div>
+
+          <div class="sr-card" style="margin-top:12px;">
+            <div class="sr-label">categories</div>
+            <div class="sr-pre">{{ (summary.get("categories") if summary.get("categories") is not none else []) | tojson(indent=2) }}</div>
+          </div>
+
+          {% if results.get("urlscan") %}
+            <details>
+              <summary>Raw urlscan JSON</summary>
+              <div class="sr-pre">{{ results.get("urlscan") | tojson(indent=2) }}</div>
+            </details>
+          {% endif %}
+        </div>
+
+        <div class="sr-divider"></div>
+
+        <!-- ========== IPQS (URL) ========== -->
+        <div class="sr-section">
+          <div class="sr-head">
+            <h3>IPQS (URL)</h3>
+            <span class="sr-btn sr-btn-disabled">No public link</span>
+          </div>
+
+          {% if results.get("ipqs_url_error") %}
+            <div class="sr-error">{{ results.get("ipqs_url_error") }}</div>
+          {% endif %}
+
+          {% set ipqs_percent = results.get("ipqs_url_gauge_percent") %}
+          {% set ipqs_score = results.get("ipqs_url_risk_score", 0) %}
+          {% set ipqs_label = results.get("ipqs_url_gauge_label") or "Risk Score" %}
+
+          <div class="sr-row">
+            <div class="sr-card" style="display:flex;gap:16px;align-items:center;">
+              <div class="sr-donut" style="--p: {{ ipqs_percent if ipqs_percent is not none else 0 }}; --c: #ffa24d;">
+                <div class="sr-donut-center">
+                  <div class="big">{{ ipqs_score }}</div>
+                  <div class="small">/ 100</div>
+                  <div class="tiny">{{ ipqs_label }}</div>
+                </div>
+              </div>
+
+              <div style="flex:1;">
+                <div class="sr-mini" style="margin-bottom:10px;">
+                  <div class="sr-label">risk_score</div>
+                  <div class="sr-value">{{ ipqs_score }}</div>
+                </div>
+
+                {% if results.get("ipqs_url_domain") or results.get("ipqs_url_final_url") %}
+                  <div class="sr-mini">
+                    <div class="sr-label">details</div>
+                    <div class="sr-muted">
+                      {% if results.get("ipqs_url_domain") %}domain: {{ results.get("ipqs_url_domain") }}<br>{% endif %}
+                      {% if results.get("ipqs_url_final_url") %}final_url: {{ results.get("ipqs_url_final_url") }}{% endif %}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% if results.get("ipqs_url_flags") %}
+            <div class="sr-kv">
+              <div class="sr-mini">
+                <div class="sr-label">unsafe</div>
+                <div class="sr-value">{{ results.get("ipqs_url_flags").get("unsafe") }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">phishing</div>
+                <div class="sr-value">{{ results.get("ipqs_url_flags").get("phishing") }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">malware</div>
+                <div class="sr-value">{{ results.get("ipqs_url_flags").get("malware") }}</div>
+              </div>
+              <div class="sr-mini">
+                <div class="sr-label">suspicious</div>
+                <div class="sr-value">{{ results.get("ipqs_url_flags").get("suspicious") }}</div>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Why this score? (URL) -->
+          <div class="sr-why">
+            <h4>Why this score? <span class="sr-pill">IPQS is a fraud-prevention score</span></h4>
+            <div class="sr-muted">A high number doesn’t mean the URL is “confirmed malicious” — it means “higher risk signals”.</div>
+            <ul>
+              {% if results.get("ipqs_url_flags") and results.get("ipqs_url_flags").get("phishing") %}
+                <li>Marked as phishing.</li>
+              {% endif %}
+              {% if results.get("ipqs_url_flags") and results.get("ipqs_url_flags").get("malware") %}
+                <li>Marked as malware.</li>
+              {% endif %}
+              {% if results.get("ipqs_url_flags") and results.get("ipqs_url_flags").get("suspicious") %}
+                <li>Marked as suspicious.</li>
+              {% endif %}
+              {% if results.get("ipqs_url_flags") and results.get("ipqs_url_flags").get("unsafe") %}
+                <li>Marked as unsafe.</li>
+              {% endif %}
+              {% if (not results.get("ipqs_url_flags")) %}
+                <li>Flags not available (API key/plan may limit fields).</li>
+              {% endif %}
+              <li>Use VirusTotal + urlscan together for confirmation.</li>
+            </ul>
+          </div>
+
+          {% if results.get("ipqs_url_request_id") %}
+            <div class="sr-muted" style="margin-top:10px;">request_id: {{ results.get("ipqs_url_request_id") }}</div>
+          {% endif %}
+
+          {% if results.get("ipqs_url") %}
+            <details>
+              <summary>Raw IPQS URL JSON</summary>
+              <div class="sr-pre">{{ results.get("ipqs_url") | tojson(indent=2) }}</div>
+            </details>
+          {% endif %}
+        </div>
+
+      {% endif %}
+
+      <!-- ===================== EMAIL MODE ===================== -->
+      {% if results.get("input_type") == "email" %}
+        <div class="sr-section">
+          <div class="sr-head">
+            <h3>IPQS (Email)</h3>
+            <span class="sr-btn sr-btn-disabled">No public link</span>
+          </div>
+
+          {% if results.get("ipqs_email_error") %}
+            <div class="sr-error">{{ results.get("ipqs_email_error") }}</div>
+          {% endif %}
+
+          {% set ep = results.get("ipqs_email_gauge_percent") %}
+          {% set fs = results.get("ipqs_email_fraud_score", 0) %}
+          {% set el = results.get("ipqs_email_gauge_label") or "Fraud Score" %}
+
+          <div class="sr-row">
+            <div class="sr-card" style="display:flex;gap:16px;align-items:center;">
+              <div class="sr-donut" style="--p: {{ ep if ep is not none else 0 }}; --c: #ffa24d;">
+                <div class="sr-donut-center">
+                  <div class="big">{{ fs }}</div>
+                  <div class="small">/ 100</div>
+                  <div class="tiny">{{ el }}</div>
+                </div>
+              </div>
+
+              <div style="flex:1;">
+                <div class="sr-kv">
+                  <div class="sr-mini">
+                    <div class="sr-label">valid</div>
+                    <div class="sr-value">{{ results.get("ipqs_email_valid") }}</div>
+                  </div>
+                  <div class="sr-mini">
+                    <div class="sr-label">disposable</div>
+                    <div class="sr-value">{{ results.get("ipqs_email_disposable") }}</div>
+                  </div>
+                  <div class="sr-mini">
+                    <div class="sr-label">catch_all</div>
+                    <div class="sr-value">{{ results.get("ipqs_email_catch_all") }}</div>
+                  </div>
+                  <div class="sr-mini">
+                    <div class="sr-label">honeypot</div>
+                    <div class="sr-value">{{ results.get("ipqs_email_honeypot") }}</div>
+                  </div>
+                  <div class="sr-mini">
+                    <div class="sr-label">recent_abuse</div>
+                    <div class="sr-value">{{ results.get("ipqs_email_recent_abuse") }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Why this score? (Email) -->
+          {% set raw = results.get("ipqs_email") or {} %}
+          <div class="sr-why">
+            <h4>Why this score? <span class="sr-pill">not “is this email real?”</span></h4>
+            <div class="sr-muted">
+              IPQS fraud_score is mainly for signup/payment fraud prevention. Real emails can still score high.
+            </div>
+            <ul>
+              {% if raw.get("generic") is not none %}
+                <li>Role / generic inbox: <strong>{{ raw.get("generic") }}</strong> (support@, info@, admin@ often score higher).</li>
+              {% endif %}
+              {% if raw.get("leaked") is not none %}
+                <li>Found in breach/leak datasets: <strong>{{ raw.get("leaked") }}</strong>.</li>
+              {% endif %}
+              {% if raw.get("spf_record") is not none %}
+                <li>SPF record present: <strong>{{ raw.get("spf_record") }}</strong> (missing SPF may reduce trust).</li>
+              {% endif %}
+              {% if raw.get("deliverability") %}
+                <li>Deliverability: <strong>{{ raw.get("deliverability") }}</strong>.</li>
+              {% endif %}
+              {% if raw.get("smtp_score") is not none %}
+                <li>SMTP score: <strong>{{ raw.get("smtp_score") }}</strong> (lower can increase risk).</li>
+              {% endif %}
+              {% if raw.get("domain_age") and raw.get("domain_age").get("human") %}
+                <li>Domain age: <strong>{{ raw.get("domain_age").get("human") }}</strong>.</li>
+              {% endif %}
+              <li>Tip: treat <strong>valid + not disposable + not recent_abuse</strong> as “likely fine” even if score is medium/high.</li>
+            </ul>
+          </div>
+
+          {% if results.get("ipqs_email_request_id") %}
+            <div class="sr-muted" style="margin-top:10px;">request_id: {{ results.get("ipqs_email_request_id") }}</div>
+          {% endif %}
+
+          {% if results.get("ipqs_email") %}
+            <details>
+              <summary>Raw IPQS Email JSON</summary>
+              <div class="sr-pre">{{ results.get("ipqs_email") | tojson(indent=2) }}</div>
+            </details>
           {% endif %}
         </div>
       {% endif %}
 
-      <!-- ===================== VT FILE / HASH ===================== -->
-      {% if results.vt_file_stats %}
-        {% set detf = results.vt_file_detected|default(0) %}
-        {% set pctf = results.vt_file_percent|default(0) %}
-        {% if detf == 0 %}
-          {% set tonef = "good" %}
-        {% elif detf <= 2 %}
-          {% set tonef = "warn" %}
-        {% else %}
-          {% set tonef = "bad" %}
-        {% endif %}
-
-        <div class="block">
-          <div class="block-head">
-            <h3>VirusTotal (File / Hash)</h3>
-            {% if results.vt_file_link %}
-              <a class="btnlink" href="{{ results.vt_file_link }}" target="_blank" rel="noreferrer">Open Report</a>
+      <!-- ===================== FILE/HASH MODE ===================== -->
+      {% if results.get("input_type") in ["file", "hash"] %}
+        <div class="sr-section">
+          <div class="sr-head">
+            <h3>VirusTotal (File)</h3>
+            {% if results.get("vt_file_link") %}
+              <a class="sr-btn" href="{{ results.get('vt_file_link') }}" target="_blank" rel="noopener">Open Report</a>
+            {% else %}
+              <span class="sr-btn sr-btn-disabled">Open Report</span>
             {% endif %}
           </div>
 
-          <div class="score-row">
-            <div class="gauge {{ tonef }}" style="--p: {{ pctf }};">
-              <div class="gauge-inner">
-                <div class="gauge-big">{{ results.vt_file_detected }}</div>
-                <div class="gauge-small">/ {{ results.vt_file_total }}</div>
-                <div class="gauge-label">Detections</div>
-              </div>
-            </div>
+          {% set detected = results.get("vt_file_detected", 0) %}
+          {% set total = results.get("vt_file_total", 0) %}
+          {% set pct = results.get("vt_file_percent", 0) %}
 
-            <div class="score-meta">
-              <div class="meta-card">
-                <div class="meta-title">Reputation</div>
-                {% if results.vt_file_reputation is not none %}
-                  <div class="meta-value">{{ results.vt_file_reputation }}</div>
-                {% else %}
-                  <div class="meta-muted">N/A</div>
-                {% endif %}
+          <div class="sr-row">
+            <div class="sr-card" style="display:flex;gap:16px;align-items:center;">
+              <div class="sr-donut" style="--p: {{ pct }}; --c: #ff6b6b;">
+                <div class="sr-donut-center">
+                  <div class="big">{{ detected }}</div>
+                  <div class="small">/ {{ total }}</div>
+                  <div class="tiny">Detections</div>
+                </div>
               </div>
 
-              <div class="meta-card">
-                <div class="meta-title">SHA / Hash</div>
-                {% if results.file_sha256 %}
-                  <div class="meta-muted mono hash">{{ results.file_sha256 }}</div>
-                {% elif results.file_hash_provided %}
-                  <div class="meta-muted mono hash">{{ results.file_hash_provided }}</div>
-                {% else %}
-                  <div class="meta-muted">N/A</div>
-                {% endif %}
+              <div style="flex:1;">
+                <div class="sr-mini">
+                  <div class="sr-label">Meaning</div>
+                  <div class="sr-muted">Gauge = (malicious + suspicious) / total engines</div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="stats">
-            {% for k, v in results.vt_file_stats.items() %}
-              <div class="stat"><span>{{ k }}</span><b>{{ v }}</b></div>
-            {% endfor %}
-          </div>
+          {% if results.get("vt_file_report") %}
+            <details>
+              <summary>Raw VT File JSON</summary>
+              <div class="sr-pre">{{ results.get("vt_file_report") | tojson(indent=2) }}</div>
+            </details>
+          {% endif %}
         </div>
       {% endif %}
 
-    </section>
-
-    <footer class="foot">
-      <p>If scans are slow, increase <code>tries</code>/<code>delay</code> in <code>app.py</code>.</p>
-    </footer>
+    </div>
   </div>
 </body>
 </html>

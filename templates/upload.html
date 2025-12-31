@@ -1,73 +1,73 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scanner - Upload</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Project — Scanner</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
-  <div class="wrap">
-    <header class="top">
-      <h1>URL & File Scanner</h1>
-      <p>Scan URLs with VirusTotal + urlscan.io, and files (or file hashes) with VirusTotal.</p>
-    </header>
+  <div class="container">
+    <h1>URL & File Scanner</h1>
 
     {% if messages %}
-      <section class="card warn">
-        <h2>Messages</h2>
-        <ul>
-          {% for m in messages %}
-            <li>{{ m }}</li>
-          {% endfor %}
-        </ul>
-      </section>
+      <div class="messages">
+        {% for m in messages %}
+          <div class="message">{{ m }}</div>
+        {% endfor %}
+      </div>
     {% endif %}
 
-    <section class="grid">
-      <div class="card">
-        <h2>Scan URL</h2>
-        <form method="post" action="/scan">
-          <input type="hidden" name="action" value="scan_url" />
+    <!-- ================= URL SCAN ================= -->
+    <section class="card">
+      <h2>URL Scan</h2>
+      <form method="POST" action="{{ url_for('scanner.scan') }}">
+        <input type="hidden" name="action" value="scan_url">
 
-          <label>URL</label>
-          <input name="url" type="url" placeholder="https://example.com" required>
+        <label for="url">URL</label>
+        <input id="url" name="url" type="url" placeholder="https://example.com" required>
 
-          <label>urlscan visibility</label>
-          <select name="visibility">
-            <option value="public">public</option>
-            <option value="unlisted">unlisted</option>
-            <option value="private">private</option>
-          </select>
+        <label for="visibility">urlscan Visibility</label>
+        <select id="visibility" name="visibility">
+          <option value="public" selected>public</option>
+          <option value="unlisted">unlisted</option>
+        </select>
 
-          <button type="submit">Scan URL</button>
-          <small>Tip: “public” makes the scan visible to others on urlscan.io.</small>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2>Scan File (Upload OR Hash)</h2>
-
-        <form method="post" action="/scan" enctype="multipart/form-data">
-          <input type="hidden" name="action" value="scan_file" />
-
-          <label>Upload a file (optional)</label>
-          <input name="file" type="file">
-
-          <div class="or-line"><span>OR</span></div>
-
-          <label>Enter hash (SHA-256 / SHA-1 / MD5)</label>
-          <input name="file_hash" type="text" placeholder="e.g. 44d88612fea8a8f36de82e1278abb02f">
-
-          <button type="submit">Scan File / Hash</button>
-          <small>Choose ONE: upload a file OR enter a hash (not both).</small>
-        </form>
-      </div>
+        <button type="submit">Scan URL</button>
+      </form>
     </section>
 
-    <footer class="foot">
-      <p>Keys needed: <code>VT_API_KEY</code> and <code>URLSCAN_API_KEY</code>.</p>
-    </footer>
+    <!-- ================= EMAIL CHECK (IPQS) ================= -->
+    <section class="card">
+      <h2>Email Check (IPQS)</h2>
+      <form method="POST" action="{{ url_for('scanner.scan') }}">
+        <input type="hidden" name="action" value="scan_email">
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="name@example.com" required>
+
+        <button type="submit">Check Email</button>
+      </form>
+    </section>
+
+    <!-- ================= FILE / HASH ================= -->
+    <section class="card">
+      <h2>File / Hash Scan</h2>
+      <form method="POST" action="{{ url_for('scanner.scan') }}" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="scan_file">
+
+        <label for="file">Upload file</label>
+        <input id="file" name="file" type="file">
+
+        <p style="margin: 10px 0; opacity: 0.8;">OR</p>
+
+        <label for="file_hash">SHA-256 Hash</label>
+        <input id="file_hash" name="file_hash" type="text" placeholder="64 hex chars">
+
+        <button type="submit">Scan File/Hash</button>
+      </form>
+    </section>
   </div>
 </body>
 </html>
